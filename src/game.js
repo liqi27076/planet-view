@@ -1,35 +1,45 @@
-var npc;
-var myGamePiece;
-var myObstacle;
 
-var obstacles = [];
-
-function startGame() {
-    myGamePiece = new component(30, 30, "red", 10, 120);
-    npc = new component(30, 30, "blue", 100, 120, 'npc');
-    myObstacle  = new component(10, 200, "green", 300, 120);
-
-    obstacles.push(npc);
-    obstacles.push(myObstacle);
-
-    myGameArea.start();
-}
-
-var myGameArea = {
+var gameArea = {
     canvas : document.createElement("canvas"),
+    objects: [],
     start : function() {
         this.canvas.width = 480;
         this.canvas.height = 270;
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-        this.interval = setInterval(updateGameArea, 20);
+
+        // $(canvas).click(function(e) {
+        //     alert(e.pageX, e.pageY);
+        // });
+
+        this.update();
     },
     clear : function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    update : function() {
+        this.clear();
+        for( let object of this.objects) {
+            object.update();
+        }
     }
+};
+
+function startGame() {
+    role = new component('leo', 30, 30, 10, 120, 'red');
+    let npc = new component('npc', 30, 30, 100, 120, 'blue');
+    let building  = new component('building', 10, 200, 300, 120, 'gray');
+
+    gameArea.objects.push(role);
+    gameArea.objects.push(npc);
+    gameArea.objects.push(building);
+
+    gameArea.start();
 }
 
-function component(width, height, color, x, y, name) {
+var role;
+
+function component(name, width, height, x, y, resource) {
     this.name = (name) ? name : 'default';
     this.width = width;
     this.height = height;
@@ -38,10 +48,17 @@ function component(width, height, color, x, y, name) {
     this.x = x;
     this.y = y;    
     this.update = function() {
-        ctx = myGameArea.context;
-        ctx.fillStyle = color;
+        this.x = this.x + this.speedX;
+        this.y = this.y + this.speedY;
+        ctx = gameArea.context;
+        ctx.fillStyle = resource;
         ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
+        this.clearMove();
+    };
+    this.clearMove = function() {
+        this.speedX = 0;
+        this.speedY = 0;
+    };
     this.newPos = function(obstacles) {
         let tryX = this.x + this.speedX;
         let tryY = this.y + this.speedY;
@@ -50,8 +67,7 @@ function component(width, height, color, x, y, name) {
 
         this.x = tryX;
         this.y = tryY;
-
-    }
+    };
     this.talk = function(other) {
         if ((this.x == other.x + other.width + 1) ||
                 (this.x + this.width + 1 ==  other.x) ||
@@ -59,10 +75,11 @@ function component(width, height, color, x, y, name) {
                 (this.y + this.height + 1 == other.y)) {
             other.talked();
         }
-    }
+    };
     this.talked = function() {
         alert(this.name + ' say: hi');
-    }
+    };
+
     this.collideWith = function(x, y, otherobjs) {
         for (let otherobj of otherobjs) {
 
@@ -86,37 +103,33 @@ function component(width, height, color, x, y, name) {
     } 
 }
 
-function updateGameArea() {
-    myGameArea.clear();
-    myObstacle.update();
-    myGamePiece.newPos(obstacles);    
-    myGamePiece.update();
-    npc.update();
-}
-
 function moveup() {
-    myGamePiece.speedY = -1; 
+    role.speedY = -1;
+    gameArea.update();
 }
 
 function movedown() {
-    myGamePiece.speedY = 1; 
+    role.speedY = 1; 
+    gameArea.update();
 }
 
 function moveleft() {
-    myGamePiece.speedX = -1; 
+    role.speedX = -1;
+    gameArea.update();
 }
 
 function moveright() {
-    myGamePiece.speedX = 1; 
+    role.speedX = 1;
+    gameArea.update();
 }
 
 function talk() {
     for (let obstacle of obstacles) {
-        myGamePiece.talk(obstacle);
+        role.talk(obstacle);
     }
 }
 
 function clearmove() {
-    myGamePiece.speedX = 0; 
-    myGamePiece.speedY = 0; 
+    role.speedX = 0; 
+    role.speedY = 0; 
 }
